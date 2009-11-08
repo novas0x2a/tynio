@@ -1,0 +1,5 @@
+Twisted pYthon Notify IO: A Python library for notify.io, your global web
+notification system.
+
+This is pretty rough, but it does work. To see an example of use, check out the
+docs; it uses libnotify to provide tynio updates.
