@@ -6,8 +6,8 @@ import pynotify
 from twisted.python import log as twistedLog
 from twisted.internet import reactor
 
-API_KEY = 'YOUR_API_KEY_GOES_HERE'
-LISTEN_TO = 'EMAIL_ADDRESS_TO_LISTEN_TO'
+# Replace with the contents of your .ListenURL file
+LISTEN_URL = 'http://listen.notify.io/~1/listen/XXX'
 
 class Notifier(object):
     ''' A small wrapper around libnotify. Because it has a crappy API. '''
@@ -26,6 +26,6 @@ if __name__ == '__main__':
 
     n = Notifier('NIO Linux Client')
 
-    nio = tynio.NotifyIO(API_KEY, LISTEN_TO, n.notify)
+    nio = tynio.NotifyIO(LISTEN_URL, n.notify)
     nio.listen()
     reactor.run()

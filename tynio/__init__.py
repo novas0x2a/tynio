@@ -4,6 +4,7 @@ from twisted.web.http import HTTPClient
 from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet import reactor
 from twisted.python import log as twistedLog
+from urlparse import urlparse
 
 try:
     import simplejson as json
@@ -37,7 +38,7 @@ class _CometStream(HTTPClient):
 
     def connectionMade(self):
         self.sendCommand('GET', self.factory.path)
-        self.sendHeader('Host', 'api.notify.io')
+        self.sendHeader('Host', self.factory.host)
         self.sendHeader('User-Agent', self.factory.agent)
         self.endHeaders()
         twistedLog.msg('Connected and receiving...')
@@ -45,8 +46,9 @@ class _CometStream(HTTPClient):
 class _CometFactory(ReconnectingClientFactory):
     protocol = _CometStream
 
-    def __init__(self, callback, path, agent=None):
+    def __init__(self, callback, host, path, agent=None):
         self.callback = callback
+        self.host     = host
         self.path     = path
         self.agent    = agent
 
@@ -61,14 +63,16 @@ class _CometFactory(ReconnectingClientFactory):
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
 class NotifyIO(object):
-    def __init__(self, api_key, email, callback, api_version=1):
+    def __init__(self, listen_url, callback):
         self.callback = callback
-        path = '/v%(version)i/listen/%(email)s?api_key=%(api)s' % \
-                   dict(version = api_version, email = md5(email).hexdigest(), api = api_key)
-        self.factory = _CometFactory(callback, path)
+        url = urlparse(listen_url)
+        self.path = url.path
+        if url.query: self.path += '?' + url.query
+        self.host = url.hostname
+        self.factory = _CometFactory(callback, self.host, self.path)
 
     def listen(self):
-        reactor.connectTCP('api.notify.io', 80, self.factory)
+        reactor.connectTCP(self.host, 80, self.factory)
 
     def kill(self):
         self.factory.doStop()
